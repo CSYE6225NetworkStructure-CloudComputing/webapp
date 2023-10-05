@@ -1,0 +1,63 @@
+name: CI
+
+on:
+
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+
+
+        node-version: '16' 
+
+    - name: Set up MySQL
+      run: |
+        sudo /etc/init.d/mysql stop
+        mysql -e 'CREATE DATABASE ${{ env.DB_DATABASE }};' -u${{ env.DB_USER }} -p${{ env.DB_PASSWORD }}
+        
+
+      env:
+        DB_DATABASE: webapp
+        DB_USER: root
+        DB_PASSWORD: root
+
+    - name: Install project dependencies
+      run: npm install
+
+    - name: Run integration tests
+      id: test
+      run: |
+        npm test
+        echo "Test exit code: $?"
+      continue-on-error: true
+
+    - name: On Success
+      if: steps.test.outcome == 'success'
+      uses: myrotvorets/set-commit-status-action@master
+      with:
+        sha: ${{ github.sha }}
+        token: ${{ secrets.GITHUB_TOKEN }}
+        status: success
+        context: CI/Tests
+        description: 'Integration tests passed'
+
+    - name: on failure
+      if: steps.test.outcome == 'failure'
+      uses: myrotvorets/set-commit-status-action@master
+      with:
+        sha: ${{ github.sha }}
+        token: ${{ secrets.GITHUB_TOKEN }}
+        status: failure
+        context: CI/Tests
+        description: 'Integration tests failed'
