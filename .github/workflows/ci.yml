@@ -42,7 +42,7 @@ jobs:
       run: |
         npm test
         echo "Test exit code: $?"
-      continue-on-error: true
+      #continue-on-error: true
 
     - name: On Success
       if: steps.test.outcome == 'success'
