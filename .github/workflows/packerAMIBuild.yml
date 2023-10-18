@@ -1,9 +1,9 @@
 name: AMI
 
 on:
-  push:
-    branches:
-      - main
+  pull_request:
+    types:
+      - closed
 
 jobs:
   packer:
@@ -11,8 +11,7 @@ jobs:
     name: packer
 
 
- steps:
-
+    steps:
       - name: Check out code
         uses: actions/checkout@v2
 
@@ -48,4 +47,4 @@ jobs:
 
       # Build artifact
       - name: Build Artifact
-
+        run: packer build webapp-debian.pkr.hcl
