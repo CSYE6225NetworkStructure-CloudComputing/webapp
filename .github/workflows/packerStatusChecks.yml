@@ -1,0 +1,43 @@
+name: Packer CI
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  packer-checks:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Check out code
+      uses: actions/checkout@v2
+
+    - name: Set up Packer
+      run: |
+        curl -o /tmp/packer.zip https://releases.hashicorp.com/packer/1.8.6/packer_1.8.6_linux_amd64.zip
+        sudo unzip -o /tmp/packer.zip -d /usr/local/bin/
+      shell: bash
+
+    - name: Check for Packer Format Changes
+    id: fmt-check
+    run: |
+    git diff --exit-code -- '*.hcl'  # Specify the file extensions you want to check
+    if [ $? -ne 0 ]; then
+      echo "Packer template has format changes. Please run 'packer fmt' locally and commit the changes."
+      exit 1
+    fi
+  shell: bash
+
+
+    - name: Run Packer Validate
+      if: steps.fmt-check.outcome == 'success'
+      run: packer validate webapp-debian.pkr.hcl  # Replace 'your-packer-template.hcl' with the actual file name
+      shell: bash
+
+
+    - name: Prevent PR Merge on Packer Validate Failure
+      if: steps.fmt-check.outcome == 'success' && failure()
+      run: echo "Packer validation failed. Please fix the Packer template issues and commit the changes." && exit 1
+      shell: bash
+
