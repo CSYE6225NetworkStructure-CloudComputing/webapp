@@ -34,7 +34,7 @@ jobs:
       - name: Check for Packer Format Changes
         id: fmt-check
         run: |
-          git diff --exit-code -- 'Packer/webapp-debian.pkr.hcl'
+          git diff --exit-code -- 'webapp-debian.pkr.hcl'
           if [ $? -ne 0 ]; then
             echo "Packer template has format changes. Please run 'packer fmt' locally and commit the changes."
             exit 1
@@ -42,7 +42,7 @@ jobs:
 
       - name: Run Packer Validate
         if: steps.fmt-check.outcome == 'success'
-        run: packer validate Packer/webapp-debian.pkr.hcl
+        run: packer validate webapp-debian.pkr.hcl
 
       - name: Prevent PR Merge on Packer Validate Failure
         if: steps.fmt-check.outcome == 'success' && failure()
