@@ -5,48 +5,33 @@ sleep 30
 sudo apt-get update
 sudo apt upgrade -y
 
-# Installing mySQL
-echo_info "INSTALLING-DB"
-sudo apt install mariadb-server
-# sudo mysql_secure_installation
+
+
+# Install MariaDB server
+sudo apt install mariadb-server -y
+# Start the MariaDB service
 sudo systemctl start mariadb
-sudo mysqladmin -u root password 'root'
-sudo -u CREATE DATABASE webapp;
-
-
-# - Set root password? [Y/n] y
-# - Remove anonymous users? [Y/n] y
-# - Disallow root login remotely? [Y/n] n
-# - Remove test database and access to it? [Y/n] y
-# - Reload privilege tables now? [Y/n] y
-# Switch to unix_socket authentication [Y/n] y
-# Change the root password? [Y/n] n
-# Remove anonymous users? [Y/n] y
-# Disallow root login remotely? [Y/n] n
-# Remove test database and access to it? [Y/n] n
-# Reload privilege tables now? [Y/n] y
-
-
-
+# Change the root password to 'root'
+sudo mysql -u root -e "ALTER USER 'root'@'localhost' IDENTIFIED BY 'root';"
+sudo mysql -u root -p root -e "CREATE DATABASE 'webapp';"
 
 # Installing node server
-echo_info "INSTALLING-NODEJS"
 sudo apt install -y nodejs npm
-
 # Installing unzip
-echo_info "INSTALLING-UNZIP"
 sudo apt install -y unzip
+
 
 cd /opt
 unzip webapp.zip
 rm webapp.zip
 cd webapp
-mv users.csv /opt/
-npm i
+mv user.csv /opt/webapp
 
 rm -rf node_modules
 rm package-lock.json
 npm install
+
+sudo apt-get remove --purge -y git
 
 
 

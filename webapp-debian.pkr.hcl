@@ -31,9 +31,10 @@ variable "subnet_id" {
 source "amazon-ebs" "webapp-debian" {
   region          = "${var.aws_region}"
   ami_name        = "cloud_webapp_${formatdate("YYYY_MM_DD_hh_mm_ss", timestamp())}"
+  ami_users       = ["214910345944","294410349781"]
   ami_description = "AMI for webapp"
   ami_regions     = ["us-east-1"]
-  ami_users       = ["214910345944","294410349781"]
+
 
   aws_polling {
     delay_seconds = 120

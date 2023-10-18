@@ -12,39 +12,92 @@ jobs:
 
 
     steps:
-      - name: Check out code
-        uses: actions/checkout@v2
 
-      - name: Install Packer
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y packer
+    - name: Checkout code
+      uses: actions/checkout@v3
 
-      - name: Zip the project & copy to repo
-        run: |
-          cd ../
-          zip -r webapp.zip webapp
-          cd -
-          cp ../webapp.zip .
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '16' 
 
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v1
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1
+    - name: Set up MySQL
+      run: |
 
-      - name: Setup 'packer'
-        uses: hashicorp/setup-packer@main
-        id: setup
-        with:
-          version: '1.8.3'
+        sudo /etc/init.d/mysql start
+
+        mysql -e 'CREATE DATABASE ${{ env.DB_DATABASE }};' -u${{ env.DB_USER }} -p${{ env.DB_PASSWORD }}
+        
+
+      env:
+        DB_DATABASE: webapp
+        DB_USER: root
+        DB_PASSWORD: root
+
+    - name: Install project dependencies
+      run: npm install
+
+    - name: Run integration tests
+      id: test
+      run: |
+        npm test
+        echo "Test exit code: $?"
+      #continue-on-error: true
+
+    - name: On Success
+      if: steps.test.outcome == 'success'
+      uses: myrotvorets/set-commit-status-action@master
+      with:
+        sha: ${{ github.sha }}
+        token: ${{ secrets.GITHUB_TOKEN }}
+        status: success
+        context: CI/Tests
+        description: 'Integration tests passed'
+    
+    - name: on failure
+      if: steps.test.outcome == 'failure'
+      uses: myrotvorets/set-commit-status-action@master
+      with:
+        sha: ${{ github.sha }}
+        token: ${{ secrets.GITHUB_TOKEN }}
+        status: failure
+        context: CI/Tests
+        description: 'Integration tests failed'
 
 
-      # Initialize Packer templates
-      - name: Initialize Packer Template
-        run: packer init webapp-debian.pkr.hcl
+    - name: Check out code
+      uses: actions/checkout@v2
 
-      # Build artifact
-      - name: Build Artifact
-        run: packer build webapp-debian.pkr.hcl
+    - name: Install Packer
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y packer
+
+    - name: Zip the project & copy to repo
+      run: |
+        npm install
+        cd ../
+        zip -r webapp.zip webapp
+        cd -
+        cp ../webapp.zip .
+
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: us-east-1
+
+    - name: Setup 'packer'
+      uses: hashicorp/setup-packer@main
+      id: setup
+      with:
+        version: '1.8.3'
+
+    # Initialize Packer templates
+    - name: Initialize Packer Template
+      run: packer init webapp-debian.pkr.hcl
+
+    # Build artifact
+    - name: Build Artifact
+      run: packer build webapp-debian.pkr.hcl
