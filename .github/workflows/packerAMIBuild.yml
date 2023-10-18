@@ -53,7 +53,7 @@ jobs:
         status: success
         context: CI/Tests
         description: 'Integration tests passed'
-
+    
     - name: on failure
       if: steps.test.outcome == 'failure'
       uses: myrotvorets/set-commit-status-action@master
@@ -64,40 +64,40 @@ jobs:
         context: CI/Tests
         description: 'Integration tests failed'
 
-      - name: Check out code
-        uses: actions/checkout@v2
+    - name: Check out code
+      uses: actions/checkout@v2
 
-      - name: Install Packer
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y packer
+    - name: Install Packer
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y packer
 
-      - name: Zip the project & copy to repo
-        run: |
-          npm install
-          cd ../
-          zip -r webapp.zip webapp
-          cd -
-          cp ../webapp.zip .
+    - name: Zip the project & copy to repo
+      run: |
+        npm install
+        cd ../
+        zip -r webapp.zip webapp
+        cd -
+        cp ../webapp.zip .
 
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v1
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: us-east-1
 
-      - name: Setup 'packer'
-        uses: hashicorp/setup-packer@main
-        id: setup
-        with:
-          version: '1.8.3'
+    - name: Setup 'packer'
+      uses: hashicorp/setup-packer@main
+      id: setup
+      with:
+        version: '1.8.3'
 
 
-      # Initialize Packer templates
-      - name: Initialize Packer Template
-        run: packer init webapp-debian.pkr.hcl
+    # Initialize Packer templates
+    - name: Initialize Packer Template
+      run: packer init webapp-debian.pkr.hcl
 
-      # Build artifact
-      - name: Build Artifact
-        run: packer build webapp-debian.pkr.hcl
+    # Build artifact
+    - name: Build Artifact
+      run: packer build webapp-debian.pkr.hcl
