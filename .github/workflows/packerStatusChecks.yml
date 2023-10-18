@@ -28,12 +28,12 @@ jobs:
             exit 1
           fi
 
-       - name:  zip all the webService files
+      - name: zip all the webService files
         run: |
           zip -r webapp.zip ./
           pwd ./webapp
 
-      - name:  Packer Init
+      - name: Packer Init
         uses: hashicorp/packer-github-actions@master
         with:
           command: init
