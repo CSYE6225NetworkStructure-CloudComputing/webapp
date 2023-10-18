@@ -10,7 +10,9 @@ jobs:
     runs-on: ubuntu-latest
     name: packer
 
-    steps:
+
+ steps:
+
       - name: Check out code
         uses: actions/checkout@v2
 
@@ -39,10 +41,11 @@ jobs:
         with:
           version: '1.8.3'
 
+
       # Initialize Packer templates
       - name: Initialize Packer Template
         run: packer init webapp-debian.pkr.hcl
 
       # Build artifact
       - name: Build Artifact
-        run: packer build webapp-debian.pkr.hcl
+
