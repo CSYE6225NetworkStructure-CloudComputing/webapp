@@ -1,0 +1,47 @@
+name: Packer validate
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  packer-checks:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v2
+
+      - name: Install Packer
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y packer
+
+      - name: Zip the project & copy to repo
+        run: |
+          cd ../
+          zip -r webapp.zip webapp
+          cd -
+          cp ../webapp.zip .
+
+      - name: Packer Init
+        run: packer init webapp-debian.pkr.hcl
+
+
+      - name: Check for Packer Format Changes
+        id: fmt-check
+        run: |
+          git diff --exit-code -- 'webapp-debian.pkr.hcl'
+          if [ $? -ne 0 ]; then
+            echo "Packer template has format changes. Please run 'packer fmt' locally and commit the changes."
+            exit 1
+          fi
+
+      - name: Run Packer Validate
+        if: steps.fmt-check.outcome == 'success'
+        run: packer validate webapp-debian.pkr.hcl
+
+      - name: Prevent PR Merge on Packer Validate Failure
+        if: steps.fmt-check.outcome == 'success' && failure()
+        run: echo "Packer validation failed. Please fix the Packer template issues and commit the changes." && exit 1
