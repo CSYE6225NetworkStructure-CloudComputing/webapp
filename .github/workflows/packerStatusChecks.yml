@@ -38,6 +38,7 @@ jobs:
         with:
           command: init
           target: Packer/webapp-debian.pkr.hcl
+        working-directory: Packer
 
       - name: Run Packer Validate
         if: steps.fmt-check.outcome == 'success'
