@@ -1,4 +1,4 @@
-name: AWS AMI Build
+name: AMI
 
 on:
   pull_request:
@@ -9,6 +9,7 @@ jobs:
   packer:
     runs-on: ubuntu-latest
     name: packer
+
 
     steps:
 
@@ -91,6 +92,7 @@ jobs:
         id: setup
         with:
           version: '1.8.3'
+
 
       # Initialize Packer templates
       - name: Initialize Packer Template
