@@ -13,11 +13,23 @@ jobs:
       - name: Check out code
         uses: actions/checkout@v2
 
-      - name: Set up Packer
+      - name: Install Packer
         run: |
-          curl -fsSL https://releases.hashicorp.com/packer/1.8.6/packer_1.8.6_linux_amd64.zip -o /tmp/packer.zip
-          sudo unzip -o /tmp/packer.zip -d /usr/local/bin/
-        shell: bash
+          sudo apt-get update
+          sudo apt-get install -y packer
+
+      - name: Zip the project & copy to repo
+        run: |
+          cd ../
+          zip -r webapp.zip webapp
+          cd -
+          cp ../webapp.zip .
+
+      - name: Packer Init
+        uses: hashicorp/packer-github-actions@master
+        with:
+          command: init
+          target: Packer/webapp-debian.pkr.hcl
 
       - name: Check for Packer Format Changes
         id: fmt-check
@@ -27,18 +39,6 @@ jobs:
             echo "Packer template has format changes. Please run 'packer fmt' locally and commit the changes."
             exit 1
           fi
-
-      - name: zip all the webService files
-        run: |
-          zip -r webapp.zip ./
-          pwd ./webapp
-
-      - name: Packer Init
-        uses: hashicorp/packer-github-actions@master
-        with:
-          command: init
-          target: Packer/webapp-debian.pkr.hcl
-
 
       - name: Run Packer Validate
         if: steps.fmt-check.outcome == 'success'
