@@ -26,10 +26,8 @@ jobs:
           cp ../webapp.zip .
 
       - name: Packer Init
-        uses: hashicorp/packer-github-actions@master
-        with:
-          command: init
-          target: webapp-debian.pkr.hcl
+        run: packer init webapp-debian.pkr.hcl
+
 
       - name: Check for Packer Format Changes
         id: fmt-check
