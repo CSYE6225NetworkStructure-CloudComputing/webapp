@@ -2,9 +2,9 @@
 name: AWS AMI Build
 
 on:
-  pull_request:
-    types:
-      - closed
+  push:
+    branches:
+      - main
 
 jobs:
   packer:
