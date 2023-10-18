@@ -1,4 +1,4 @@
-name: AWS AMI Build
+name: AWS AMI
 
 on:
   push:
@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     name: packer
 
- steps:
+    steps:
       - name: Check out code
         uses: actions/checkout@v2
 
@@ -37,15 +37,12 @@ jobs:
         uses: hashicorp/setup-packer@main
         id: setup
         with:
-         version: '1.8.3'
-
+          version: '1.8.3'
 
       # Initialize Packer templates
       - name: Initialize Packer Template
         run: packer init webapp-debian.pkr.hcl
 
-
-      # build artifact
+      # Build artifact
       - name: Build Artifact
         run: packer build webapp-debian.pkr.hcl
-          
