@@ -13,8 +13,12 @@ jobs:
     - name: Check out code
       uses: actions/checkout@v2
 
-    - name: Set up Packer
-      uses: hashicorp/setup-packer@v1
+   - name: Set up Packer
+  run: |
+    curl -fsSL https://releases.hashicorp.com/packer/1.8.6/packer_1.8.6_linux_amd64.zip -o /tmp/packer.zip
+    sudo unzip -o /tmp/packer.zip -d /usr/local/bin/
+  shell: bash
+
 
     - name: Check for Packer Format Changes
       id: fmt-check
