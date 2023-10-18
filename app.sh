@@ -3,13 +3,13 @@
 sleep 30
 
 sudo apt-get update
-sudo apt upgrade
+sudo apt upgrade -y
 
 # Installing mySQL
 echo_info "INSTALLING-DB"
 sudo apt install mariadb-server
 # sudo mysql_secure_installation
-# sudo systemctl start mariadb
+sudo systemctl start mariadb
 sudo mysqladmin -u root password 'root'
 sudo -u CREATE DATABASE webapp;
 
