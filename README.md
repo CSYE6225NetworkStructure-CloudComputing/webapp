@@ -43,7 +43,9 @@ scp -i ~/.ssh/digitalocean /Users/harshinivc/Documents/webapp.zip root@68.183.62
 unzip
 ~/testapp# unzip webapp.zip 
 
-
+Assignment 5
+Added Packer file to build AMI on AWS
+app.sh for the shell commands 
 
 
 
