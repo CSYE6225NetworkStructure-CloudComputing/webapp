@@ -43,7 +43,7 @@ source "amazon-ebs" "webapp-debian" {
 
 
   aws_polling {
-    delay_seconds = 120
+    delay_seconds = 30
     max_attempts  = 50
   }
 
