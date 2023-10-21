@@ -42,10 +42,10 @@ source "amazon-ebs" "webapp-debian" {
   ami_regions     = ["us-east-1"]
 
 
-    aws_polling {
+  aws_polling {
     delay_seconds = 30
     max_attempts  = 50
-  }
+  
 
   instance_type = "t2.micro"
   source_ami    = "${var.source_ami}"
