@@ -42,8 +42,8 @@ source "amazon-ebs" "webapp-debian" {
   ami_regions     = ["us-east-1"]
 
 
-  aws_polling {
-    delay_seconds = 120
+    aws_polling {
+    delay_seconds = 30
     max_attempts  = 50
   }
 
