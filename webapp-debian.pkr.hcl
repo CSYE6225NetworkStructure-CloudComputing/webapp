@@ -61,7 +61,7 @@ source "amazon-ebs" "webapp-debian" {
 }
 
 
-build {
+  build {
   sources = ["source.amazon-ebs.webapp-debian"]
 
   provisioner "shell" {
