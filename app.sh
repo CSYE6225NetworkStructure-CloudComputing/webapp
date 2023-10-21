@@ -13,6 +13,15 @@ sudo apt install mariadb-server -y
 sudo systemctl start mariadb
 # Change the root password to 'root'
 sudo mysql -u root -e "CREATE DATABASE 'webapp';"
+
+sudo mysql -u root -e "ALTER USER 'root'@'localhost' IDENTIFIED BY 'root';"
+
+# Install MariaDB server
+sudo apt install mariadb-server -y
+# Start the MariaDB service
+sudo systemctl start mariadb
+# Change the root password to 'root'
+
 sudo mysql -u root -e "ALTER USER 'root'@'localhost' IDENTIFIED BY 'root';"
 
 # Install MariaDB server
