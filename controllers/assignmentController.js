@@ -288,7 +288,7 @@ async function validCred(cred) {
     // Find the user's hashed password based on the provided username
     const account = await Account.findOne({
 
-        where: { first_name: name },
+        where: { email: name },
     });
  
     if (!account) {
@@ -308,7 +308,7 @@ async function validCred(cred) {
 async function getUserAccount(cred) {
     const { name } = cred;
     const account = await Account.findOne({
-        where: { first_name: name },
+        where: { email: name },
     });
     return account
 }
