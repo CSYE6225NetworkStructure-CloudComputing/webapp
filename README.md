@@ -12,6 +12,8 @@ This web application runs on Nodejs server and MySQL database.
     6. PATCH: /v1/assignments/{id}
     7. GET: /healthz
 
+    test
+
 to start the app 
 npm start
 
