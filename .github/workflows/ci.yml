@@ -30,9 +30,9 @@ jobs:
         
 
       env:
-        DB_DATABASE: ${{ DB_NAME }}
-        DB_USER: ${{ DB_USER }}
-        DB_PASSWORD: ${{ DB_PASSWORD }}
+        DB_DATABASE: ${{ env.DB_NAME }}
+        DB_USER: ${{ env.DB_USER }}
+        DB_PASSWORD: ${{ env.DB_PASSWORD }}
 
 
     - name: Install project dependencies
