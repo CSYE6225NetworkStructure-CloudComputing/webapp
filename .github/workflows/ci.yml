@@ -28,9 +28,9 @@ jobs:
         mysql -e 'CREATE DATABASE ${{ env.DB_DATABASE }};' -u${{ env.DB_USER }} -p${{ env.DB_PASSWORD }}
         
       env:
-        DB_DATABASE: ${{ secrets.DB_NAME }}
-        DB_USER: ${{ secrets.DB_USER }}
-        DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+        DB_DATABASE: webapp
+        DB_USER: root
+        DB_PASSWORD: root
 
     - name: Install project dependencies
       run: npm install
