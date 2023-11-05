@@ -213,7 +213,7 @@ const updateAssignment = async (req, res) => {
 
         // get new updated assignment to send via response
         const assignmentUpdated = await Assignment.findByPk(id);
-        res.status(201).json(assignmentUpdated);
+        res.status(204).json(assignmentUpdated);
 
     }
 
