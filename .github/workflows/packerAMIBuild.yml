@@ -10,7 +10,13 @@ jobs:
     runs-on: ubuntu-latest
     name: packer
 
-
+    env:
+      DB_HOST: ${{ secrets.DB_HOST }}
+      DB_USER: ${{ secrets.DB_USER }}
+      DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+      DB_NAME: ${{ secrets.DB_NAME }}
+      DB_DIALECT: ${{ secrets.DB_DIALECT }}
+      
     steps:
 
     - name: Checkout code
@@ -25,14 +31,8 @@ jobs:
       run: |
 
         sudo /etc/init.d/mysql start
-
-        mysql -e 'CREATE DATABASE ${{ env.DB_DATABASE }};' -u${{ env.DB_USER }} -p${{ env.DB_PASSWORD }}
+        mysql -e "CREATE DATABASE $DB_NAME;" -u$DB_USER -p"$DB_PASSWORD"
         
-
-      env:
-        DB_DATABASE: ${{ vars.DB_NAME }}
-        DB_USER: ${{ vars.DB_USER }}
-        DB_PASSWORD: ${{ vars.DB_PASSWORD }}
 
     - name: Install project dependencies
       run: npm install
