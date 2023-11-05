@@ -20,6 +20,14 @@ jobs:
 
 
         node-version: '16' 
+    - name: Set up Environment Variables
+      run: |
+        echo "::set-env name=DB_HOST::${{ secrets.DB_HOST }}"
+        echo "::set-env name=DB_USER::${{ secrets.DB_USER }}"
+        echo "::set-env name=DB_PASSWORD::${{ secrets.DB_PASSWORD }}"
+        echo "::set-env name=DB_NAME::${{ secrets.DB_NAME }}"
+        echo "::set-env name=DB_DIALECT::${{ secrets.DB_DIALECT }}"
+      shell: bash
 
     - name: Set up MySQL
       run: |
