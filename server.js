@@ -52,6 +52,14 @@ app.use('/v1/assignments', assignmentRouter)
 //     res.status(405).send();
 // }
 // });
+app.all('*', (req, res) => {
+  if (req.method == 'PATCH') {
+  res.status(405).end();}
+  else{
+    res.status(404).send();
+  }
+
+});
 
 const PORT = 3000
 
