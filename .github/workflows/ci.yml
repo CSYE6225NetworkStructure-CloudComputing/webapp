@@ -25,9 +25,8 @@ jobs:
       run: |
 
         sudo /etc/init.d/mysql start
-        mysql -e "CREATE DATABASE $DB_DATABASE;" -u$DB_USER -p$DB_PASSWORD
+        mysql -e 'CREATE DATABASE ${{ env.DB_DATABASE }};' -u${{ env.DB_USER }} -p${{ env.DB_PASSWORD }}
         
-
       env:
         DB_DATABASE: ${{ secrets.DB_NAME }}
         DB_USER: ${{ secrets.DB_USER }}
