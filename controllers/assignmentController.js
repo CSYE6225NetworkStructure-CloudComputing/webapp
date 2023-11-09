@@ -1,4 +1,9 @@
+
+const logger = require('../logging');
 const db = require('../models')
+
+const StatsD = require('node-statsd');
+const statsd = new StatsD({ host: 'localhost', port: 8125 });
 
 const { bcrypt } = require('../scripts/csvUsers')
 
@@ -13,20 +18,20 @@ const basicAuth = require('basic-auth')
 
 const getAllAssignments = async (req, res) => {
 
-    
-    try {
+    statsd.increment('api_requests.get_all_assignments');
 
+    try {
         const cred = basicAuth(req)
         if (!cred) {
             res.status(401).end()
+            logger.error('Unauthorized access'); // Log unauthorized access
             return;
         }
 
-        
-        
         const isValid = await validCred(cred);
         if (!isValid) {
             res.status(401).end();
+            logger.error('Invalid credentials'); // Log invalid credentials
             return;
         }
 
@@ -40,11 +45,14 @@ const getAllAssignments = async (req, res) => {
             ]
         })
         res.status(200).send(assignments)
+        logger.info('Assignments fetched successfully'); // Log the successful retrieval
+
 
     }
     catch {
 
         res.status(400).end();
+        logger.error('Error in getAllAssignments:', error); // Log the error
     }
 
 }
@@ -52,18 +60,23 @@ const getAllAssignments = async (req, res) => {
 // 2. create assignment
 
 const addAssignment = async (req, res) => {
+    statsd.increment('api_requests.create_assignment');
 
 
     try {
+
+        
         const cred = basicAuth(req)
         if (!cred) {
             res.status(401).end()
+            logger.error('Unauthorized access'); // Log unauthorized access
             return;
         }
         const isValid = await validCred(cred);
 
         if (!isValid) {
             res.status(401).end();
+            logger.error('Invalid credentials'); // Log invalid credentials
             return;
         }
         if (Object.keys(req.query).length > 0) {
@@ -93,25 +106,30 @@ const addAssignment = async (req, res) => {
 
         // Return a 201 Created status with the created assignment as the response
         res.status(201).json(assignment);
+        logger.info('Assignments posted successfully'); // Log the successful post
+
 
     } catch (error) {
 
         console.log("Error:", error)
         res.status(400).end();
+        logger.error('Error in postAssignments:', error); // Log the error
     }
 };
-
 
 
 // 3. get single assignment
 
 const getOneAssignment = async (req, res) => {
 
-    try {
+    statsd.increment('api_requests.get_one_assignment');
 
+    try {
+       
         const cred = basicAuth(req)
         if (!cred) {
             res.status(401).end()
+            logger.error('Unauthorized access'); // Log unauthorized access
             return;
         }
 
@@ -119,29 +137,33 @@ const getOneAssignment = async (req, res) => {
 
         if (!isValid) {
             res.status(401).end();
+            logger.error('Invalid credentials'); // Log invalid credentials
             return;
         }
 
 
-  
+
         if (Object.keys(req.body).length > 0) {
             return res.status(400).end();
         }
-    
 
-        
+
+
         // Find the assignment by its ID
-        
+
         const id = req.params.id
         const assignment = await Assignment.findByPk(id);
         if (!assignment) {
             return res.status(404).json({ error: 'Assignment not found' });
-          }
+        }
         res.status(200).send(assignment)
+        logger.info('Assignment fetched successfully'); // Log the successful retrieval
+
     }
     catch {
 
         res.status(400).end();
+        logger.error('Error in getAssignment:', error); // Log the error
     }
 
 }
@@ -151,10 +173,14 @@ const getOneAssignment = async (req, res) => {
 
 const updateAssignment = async (req, res) => {
 
+    statsd.increment('api_requests.update_assignment');
+
     try {
+        
         const cred = basicAuth(req)
         if (!cred) {
             res.status(401).end()
+            logger.error('Unauthorized access'); // Log unauthorized access
             return;
         }
 
@@ -162,6 +188,7 @@ const updateAssignment = async (req, res) => {
 
         if (!isValid) {
             res.status(401).end();
+            logger.error('Invalid credentials'); // Log invalid credentials
             return;
         }
 
@@ -170,6 +197,7 @@ const updateAssignment = async (req, res) => {
         const account = await getUserAccount(cred);
         if (!account) {
             res.status(401).end();
+            logger.error('Invalid Account'); // Log invalid account
             return;
         }
 
@@ -214,20 +242,25 @@ const updateAssignment = async (req, res) => {
         // get new updated assignment to send via response
         const assignmentUpdated = await Assignment.findByPk(id);
         res.status(204).json(assignmentUpdated);
+        logger.info('Assignments updated successfully'); // Log the successful update
+
 
     }
 
     catch (error) {
         console.log("Error:", error)
         res.status(400).end();
+        logger.error('Error in updateAssignment:', error); // Log the error
     }
 }
 
 // 5. delete assignment by id
 
 const deleteAssignment = async (req, res) => {
+    statsd.increment('api_requests.delete_assignment');
 
     try {
+
         const cred = basicAuth(req)
         if (!cred) {
             res.status(401).end()
@@ -239,6 +272,7 @@ const deleteAssignment = async (req, res) => {
         if (!isValid) {
 
             res.status(401).end();
+            logger.error('Invalid credentials'); // Log invalid credentials
             return;
         }
         if (Object.keys(req.body).length > 0) {
@@ -248,6 +282,7 @@ const deleteAssignment = async (req, res) => {
         const account = await getUserAccount(cred);
         if (!account) {
             res.status(401).end();
+            logger.error('Invalid Account'); // Log invalid Account
             return;
         }
         const currentUserID = account.id;
@@ -272,12 +307,15 @@ const deleteAssignment = async (req, res) => {
         await assignment.destroy({ where: whereClause });
 
         res.status(204).end();
+        logger.info('Assignment deleted successfully'); // Log the deletion
+
 
     }
 
     catch (error) {
         console.log("Error:", error)
         res.status(400).end();
+        logger.error('Error in deleteAssignment:', error); // Log the error
     }
 
 
@@ -290,7 +328,7 @@ async function validCred(cred) {
 
         where: { email: name },
     });
- 
+
     if (!account) {
 
         return false;
@@ -318,11 +356,15 @@ const handelOthers = () => {
     res.status(405).end();
 
 }
+
+//statsd.close();
+
 module.exports = {
     addAssignment,
     getAllAssignments,
     getOneAssignment,
     updateAssignment,
     deleteAssignment,
-    handelOthers
+    handelOthers,
+    statsd:statsd
 }
