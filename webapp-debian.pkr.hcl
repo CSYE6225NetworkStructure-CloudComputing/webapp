@@ -78,6 +78,11 @@ build {
     source      = "webapp.zip"
     destination = "/opt/"
   }
+  
+  provisioner "file" {
+  source      = "cloudwatch-config.json"  # Path to your local config file
+  destination = "/opt/cloudwatch-config.json"  # Destination within the image
+}
 
   provisioner "shell" {
     environment_vars = [
