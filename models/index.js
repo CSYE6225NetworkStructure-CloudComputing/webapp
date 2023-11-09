@@ -1,4 +1,5 @@
 const dbConfig = require('../config/dbConfig.js');
+const logger = require('../logging'); // Import your logger
 
 const { Sequelize, DataTypes } = require('sequelize');
 
@@ -71,6 +72,9 @@ async function loadCSVData() {
     if (fs.existsSync(optFile)) {
       filePath = optFile;
     }
+
+    logger.info(`Reading CSV data from file`); // Log that you're reading data from the CSV file
+
     // Read the CSV file
     fs.createReadStream('user.csv')
       .pipe(csv())
@@ -93,6 +97,7 @@ async function loadCSVData() {
           //accounts.push(account);
           const Account = await db.account.create(account)
           console.log('Account Created')
+          logger.info(`Account Created`); // Log the creation of an account
         }
 
       })
@@ -103,6 +108,7 @@ async function loadCSVData() {
         try {
           // Bulk insert new accounts
           await db.account.bulkCreate(accounts, { transaction: t });
+          logger.info('Account data loaded successfully.');
 
           // Commit the transaction
           await t.commit();
@@ -111,10 +117,12 @@ async function loadCSVData() {
           // Rollback the transaction if an error occurs
           await t.rollback();
           console.error('Error loading account data:', error);
+          logger.error('Error loading account data:', error); // Log any errors
         }
       });
   } catch (error) {
     console.error('Error reading CSV file:', error);
+    logger.error('Error reading CSV file:', error); // Log any errors
   }
 }
 
