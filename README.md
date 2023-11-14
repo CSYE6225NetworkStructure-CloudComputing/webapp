@@ -49,6 +49,8 @@ Assignment 5
 Added Packer file to build AMI on AWS
 app.sh for the shell commands 
 
+DNS without autoscaling and Load balancer
+
 
 
 
