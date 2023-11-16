@@ -25,7 +25,7 @@ app.use(express.json())
   
 app.get('/healthz', async (req, res) => {
     let client;
-    //assignmentController.statsd.increment(`healthz.api.calls`)
+    assignmentController.statsd.increment(`healthz.api.calls`)
 
     try {
         res.setHeader('Cache-Control', 'no-cache, no-store');
@@ -44,7 +44,7 @@ app.get('/healthz', async (req, res) => {
         client.release();
       }
     }
-    statsd.close();
+    //statsd.close();
 });
 
 app.use('/v1/assignments', assignmentRouter)
