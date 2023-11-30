@@ -49,6 +49,9 @@ db.sequelize = sequelize
 
 db.account = require('./accountModel')(sequelize, DataTypes)
 db.assignments = require('./assignmentModel')(sequelize, DataTypes)
+const SubmissionModel = require('./submissionModel')(sequelize, Sequelize.DataTypes);
+db.Submission = SubmissionModel;
+
 
 
 

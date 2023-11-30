@@ -12,7 +12,10 @@ router.route('/').post(assignmentController.addAssignment);
 router.route('/:id').get(assignmentController.getOneAssignment);
 router.route('/:id').put(assignmentController.updateAssignment);
 router.route('/:id').delete(assignmentController.deleteAssignment);
+router.route('/:id/submission').post(assignmentController.submitAssignment);
+
 router.route('/').all(assignmentController.handelOthers);
+
 
 
 module.exports = router
