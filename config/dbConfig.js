@@ -8,7 +8,7 @@
     // USER: "root",
     // PASSWORD: "root",
     // DB: 'webapp',
-    // dialect: 'mysql',
+
 
     pool: {
         max: 5,

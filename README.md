@@ -12,6 +12,8 @@ This web application runs on Nodejs server and MySQL database.
     6. PATCH: /v1/assignments/{id}
     7. GET: /healthz
 
+    test
+
 to start the app 
 npm start
 
@@ -46,6 +48,8 @@ unzip
 Assignment 5
 Added Packer file to build AMI on AWS
 app.sh for the shell commands 
+
+DNS without autoscaling and Load balancer
 
 
 
