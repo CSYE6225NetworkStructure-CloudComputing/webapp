@@ -11,6 +11,7 @@ const { bcrypt } = require('../scripts/csvUsers')
 // create main Model
 const Account = db.account
 const Assignment = db.assignments
+const Submission = db.Submission; 
 const basicAuth = require('basic-auth')
 // main work
 
@@ -321,6 +322,110 @@ const deleteAssignment = async (req, res) => {
 
 }
 
+//6.Assignment Submittion 
+
+// Add AWS SDK
+const AWS = require('aws-sdk');
+AWS.config.update({region: 'us-east-1'}); // Update the region as per your setup
+const sns = new AWS.SNS();
+
+const submitAssignment = async (req, res) => {
+    try {
+        const cred = basicAuth(req);
+        if (!cred) {
+            return res.status(401).end();
+        }
+
+        const isValid = await validCred(cred);
+        if (!isValid) {
+            return res.status(401).end();
+        }
+
+        const userAccount = await getUserAccount(cred);
+        if (!userAccount) {
+            return res.status(401).send('Invalid Account');
+        }
+
+        console.log("body:", req.body); 
+        const currentUserID = userAccount.id;
+
+        const assignment_id = req.params.id || req.body.assignment_id || req.query.assignment_id;
+        const { submission_url } = req.body;
+        console.log("Assignment ID:", assignment_id); // Log the assignment ID
+        console.log("url:", submission_url); // Log the assignment ID
+
+        if (!assignment_id || !submission_url) {
+            return res.status(400).send('Missing assignment_id or submission_url');
+        }
+
+        const assignment = await Assignment.findByPk(assignment_id);
+
+        // Fetch the assignment
+        //console.log("Fetched Assignment:", assignment); // Log the fetched assignment
+        //console.log(" Assignment URL:",submission_url ); // Log the fetched assignment
+
+
+        if (!assignment) {
+            return res.status(404).send('Assignment not found');
+        }
+
+        if (new Date(assignment.deadline) < new Date()) {
+            return res.status(403).send('Assignment is not available or deadline passed');
+        }
+
+        const submissionsCount = await Submission.count({
+            where: { 
+              assignment_id: assignment.id, 
+              createdByUserId: userAccount.id
+            }
+          });
+
+        // Check for number of attempts
+        if (submissionsCount >= assignment.num_of_attempts) {
+            return res.status(403).send('Number of attempts exceeded');
+        }
+       
+        // Create submission record
+        const newSubmission = await db.Submission.create({
+            assignment_id: assignment.id,
+            submission_url: submission_url,
+            createdByUserId: userAccount.id // Assuming this is the ID of the user submitting the assignment
+          });
+
+          const response = {
+            id: newSubmission.id,
+            assignment_id: newSubmission.assignment_id,
+            submission_url: newSubmission.submission_url,
+            submission_date: newSubmission.submission_date,
+            submission_updated: newSubmission.submission_updated
+        };
+
+        console.log("url:", userAccount.email,assignment.id,userAccount.id,userAccount.first_name);
+        // Publish message to SNS topic
+        const snsMessage = {
+            submissionUrl: submission_url,
+            userEmail: userAccount.email,
+            assignment_id: assignment.id, 
+            userId: userAccount.id,
+            userName:userAccount.first_name,
+
+        };
+        await sns.publish({
+            TopicArn: process.env.SNS,
+            //'arn:aws:sns:us-east-1:214910345944:webapp',
+            Message: JSON.stringify(snsMessage),
+            Subject: 'New Assignment Submission'
+        }).promise();
+
+        res.status(201).json(response);
+
+    } catch (error) {
+        console.error('Error in submitAssignment:', error);
+        res.status(400).send('Error in Assignment Submission');
+    }
+};
+
+
 async function validCred(cred) {
     const { name, pass } = cred;
     // Find the user's hashed password based on the provided username
@@ -366,5 +471,6 @@ module.exports = {
     updateAssignment,
     deleteAssignment,
     handelOthers,
+    submitAssignment,
     statsd:statsd
 }
