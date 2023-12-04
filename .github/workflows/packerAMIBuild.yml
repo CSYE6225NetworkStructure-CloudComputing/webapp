@@ -111,12 +111,20 @@ jobs:
 
     - name: Create Launch Template Version  
       run: |
-       ami_id="${{ steps.packer-build.outputs.ami_id }}"
-       lt_id="lt-03e37c0f5bb8a2afe"
-       aws ec2 create-launch-template-version \
-       --launch-template-id "$lt_id" \
-       --version-description "Updated with latest AMI" \
-       --launch-template-data "{\"blockDeviceMappings\":[{\"deviceName\":\"/dev/sda1\",\"ebs\":{\"deleteOnTermination\":true,\"volumeSize\":30,\"volumeType\":\"gp2\",\"snapshotId\":\"$ami_id\"}}]}"
-       env:
-          AWS_DEFAULT_REGION: us-east-1  # Replace with your desired region
+        ami_id="${{ steps.packer-build.outputs.ami_id }}"
+        lt_id="lt-0f4e50f631edc99f2"
+        aws ec2 create-launch-template-version \
+           --launch-template-id "$lt_id" \
+           --version-description "Updated with latest AMI" \
+           --launch-template-data "{\"blockDeviceMappings\":[{\"deviceName\":\"/dev/sda1\",\"ebs\":{\"deleteOnTermination\":true,\"volumeSize\":30,\"volumeType\":\"gp2\",\"snapshotId\":\"$ami_id\"}}]}"
+      env:
+        AWS_DEFAULT_REGION: us-east-1  # Replace with your desired region
 
+    - name: Update Auto Scaling Group
+      run: |
+        lt_id="lt-0f4e50f631edc99f2"
+        asg_name="my-asg-6eae5c1"
+        lt_version=$(cat latest_version.txt)
+        aws autoscaling update-auto-scaling-group --auto-scaling-group-name "$asg_name" --launch-template "{\"LaunchTemplateId\":\"$lt_id\",\"Version\":\"$lt_version\"}"
+      env:
+        AWS_DEFAULT_REGION: us-east-1  # Replace with your desired region
