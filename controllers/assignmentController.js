@@ -412,6 +412,7 @@ const submitAssignment = async (req, res) => {
         };
         await sns.publish({
             TopicArn: process.env.SNS,
+            //TopicArn:'arn:aws:sns:us-east-1:214910345944:mySnsTopic-ea4cbc0',
             //'arn:aws:sns:us-east-1:214910345944:webapp',
             Message: JSON.stringify(snsMessage),
             Subject: 'New Assignment Submission'
