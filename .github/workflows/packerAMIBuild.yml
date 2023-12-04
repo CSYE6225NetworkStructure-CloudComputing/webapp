@@ -18,119 +18,87 @@ jobs:
       DB_DIALECT: ${{ secrets.DB_DIALECT }}
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '16' 
+    - name: Checkout code
+      uses: actions/checkout@v3
 
-      - name: Set up MySQL
-        run: |
-          sudo /etc/init.d/mysql start
-          mysql -e "CREATE DATABASE $DB_NAME;" -u$DB_USER -p"$DB_PASSWORD"
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '16' 
 
-      - name: Install project dependencies
-        run: npm install
+    - name: Set up MySQL
+      run: |
 
-      - name: Run integration tests
-        id: test
-        run: |
-          npm test
-          echo "Test exit code: $?"
-        #continue-on-error: true
+        sudo /etc/init.d/mysql start
 
-      - name: On Success
-        if: steps.test.outcome == 'success'
-        uses: myrotvorets/set-commit-status-action@master
-        with:
-          sha: ${{ github.sha }}
-          token: ${{ secrets.GITHUB_TOKEN }}
-          status: success
-          context: CI/Tests
-          description: 'Integration tests passed'
-      
-      - name: on failure
-        if: steps.test.outcome == 'failure'
-        uses: myrotvorets/set-commit-status-action@master
-        with:
-          sha: ${{ github.sha }}
-          token: ${{ secrets.GITHUB_TOKEN }}
-          status: failure
-          context: CI/Tests
-          description: 'Integration tests failed'
+        mysql -e "CREATE DATABASE $DB_NAME;" -u$DB_USER -p"$DB_PASSWORD"
 
-  - name: Configure AWS Credentials (Dev Account)
-    uses: aws-actions/configure-aws-credentials@v1
-    with:
-      aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-      aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-      aws-region: us-east-1
+    - name: Install project dependencies
+      run: npm install
 
-  - name: Setup 'packer'
-    uses: hashicorp/setup-packer@main
-    id: setup
-    with:
-      version: '1.8.3'
+    - name: Run integration tests
+      id: test
+      run: |
+        npm test
+        echo "Test exit code: $?"
+      #continue-on-error: true
 
-  # Initialize Packer templates
-  - name: Initialize Packer Template
-    run: packer init webapp-debian.pkr.hcl
-
-  # Build artifact
-  - name: Build Artifact
-    run: packer build webapp-debian.pkr.hcl
-
-  - name: Configure AWS Credentials (Demo Account)
-    uses: aws-actions/configure-aws-credentials@v1
-    with:
-      aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_DEMO }}
-      aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_DEMO }}
-      aws-region: us-east-1
-
-  # Create a new Launch Template version in the Demo account
-  - name: Create Launch Template Version  
-    run: |
-      ami_id="${{ steps.packer-build.outputs.ami_id }}"
-      lt_id="lt-03e37c0f5bb8a2afe"
-      aws ec2 create-launch-template-version \
-        --launch-template-id "$lt_id" \
-        --version-description "Updated with latest AMI" \
-        --launch-template-data "{\"blockDeviceMappings\":[{\"deviceName\":\"/dev/sda1\",\"ebs\":{\"deleteOnTermination\":true,\"volumeSize\":30,\"volumeType\":\"gp2\",\"snapshotId\":\"$ami_id\"}}]}"
-    env:
-      AWS_DEFAULT_REGION: us-east-1  # Replace with your desired region
-
-  # Update the Auto Scaling group in the Demo account
-  - name: Update Auto Scaling Group
-    run: |
-      lt_id="lt-03e37c0f5bb8a2afe"
-      asg_name="my-asg-fc24038"
-      lt_version=$(cat latest_version.txt)
-      aws autoscaling update-auto-scaling-group --auto-scaling-group-name "$asg_name" --launch-template "{\"LaunchTemplateId\":\"$lt_id\",\"Version\":\"$lt_version\"}"
-    depends-on: create-lt-version
-    env:
-      AWS_DEFAULT_REGION: us-east-1  #   region
+    - name: On Success
+      if: steps.test.outcome == 'success'
+      uses: myrotvorets/set-commit-status-action@master
+      with:
+        sha: ${{ github.sha }}
+        token: ${{ secrets.GITHUB_TOKEN }}
+        status: success
+        context: CI/Tests
+        description: 'Integration tests passed'
+    
+    - name: on failure
+      if: steps.test.outcome == 'failure'
+      uses: myrotvorets/set-commit-status-action@master
+      with:
+        sha: ${{ github.sha }}
+        token: ${{ secrets.GITHUB_TOKEN }}
+        status: failure
+        context: CI/Tests
+        description: 'Integration tests failed'
 
 
-  # Start the instance refresh
-  - name: Start Instance Refresh
-    run: |
-      aws autoscaling start-instance-refresh --auto-scaling-group-name my-asg-fc24038
+    - name: Check out code
+      uses: actions/checkout@v2
 
-  # Check the instance refresh status until it's completed
-  - name: Wait for Instance Refresh
-    run: |
-      while true; do
-          refresh_status=$(aws autoscaling describe-instance-refreshes --auto-scaling-group-name my-asg-fc24038 --query 'InstanceRefreshes[0].Status' --output text)
-          if [ "$refresh_status" == "Successful" ]; then
-              echo "Instance refresh completed successfully."
-              exit 0
-          elif [ "$refresh_status" == "Failed" ]; then
-              echo "Instance refresh failed."
-              exit 1
-          else
-              echo "Instance refresh is still in progress. Waiting..."
-              sleep 30  # Adjust the polling interval as needed
-          fi
-      done
+    - name: Install Packer
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y packer
+
+    - name: Zip the project & copy to repo
+      run: |
+        npm install
+        cd ../
+        zip -r webapp.zip webapp
+        cd -
+        cp ../webapp.zip .
+
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: us-east-1
+
+    - name: Setup 'packer'
+      uses: hashicorp/setup-packer@main
+      id: setup
+      with:
+        version: '1.8.3'
+
+    # Initialize Packer templates
+    - name: Initialize Packer Template
+      run: packer init webapp-debian.pkr.hcl
+
+    # Build artifact
+    - name: Build Artifact
+      run: packer build webapp-debian.pkr.hcl
+
