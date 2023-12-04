@@ -134,7 +134,15 @@ jobs:
       run: |
         lt_id="lt-0f4e50f631edc99f2"
         asg_name="my-asg-6eae5c1"
-        lt_version=$(cat latest_version.txt)
+        lt_version=$(aws ec2 describe-launch-template-versions --launch-template-id "$lt_id" --query 'LaunchTemplateVersions[-1].VersionNumber' --output text)
         aws autoscaling update-auto-scaling-group --auto-scaling-group-name "$asg_name" --launch-template "{\"LaunchTemplateId\":\"$lt_id\",\"Version\":\"$lt_version\"}"
-      env:
+      env:  
         AWS_DEFAULT_REGION: us-east-1  # Replace with your desired region
+
+    - name: Instance Refresh Command
+      run: |
+        asg_name="my-asg-6eae5c1"
+        aws autoscaling start-instance-refresh --auto-scaling-group-name "$asg_name"
+      env:
+        AWS_DEFAULT_REGION: us-east-1  
+
