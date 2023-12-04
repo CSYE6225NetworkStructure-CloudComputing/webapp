@@ -116,7 +116,7 @@ jobs:
         aws ec2 create-launch-template-version \
            --launch-template-id "$lt_id" \
            --version-description "Updated with latest AMI" \
-           --launch-template-data "{\"imageId\":\"$ami_id\"}"
+           --launch-template-data "{\"ImageId\":\"$ami_id\"}"
       env:
         AWS_DEFAULT_REGION: us-east-1  # Replace with your desired region
 
