@@ -102,3 +102,23 @@ jobs:
     - name: Build Artifact
       run: packer build webapp-debian.pkr.hcl
 
+    - name: Configure AWS Credentials demo
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_DEMO }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_DEMO }}
+        aws-region: us-east-1
+
+    - name: Create Launch Template Version  
+      run: |
+       ami_id="${{ steps.packer-build.outputs.ami_id }}"
+       lt_id="lt-03e37c0f5bb8a2afe"
+       aws ec2 create-launch-template-version \
+       --launch-template-id "$lt_id" \
+       --version-description "Updated with latest AMI" \
+       --launch-template-data "{\"blockDeviceMappings\":[{\"deviceName\":\"/dev/sda1\",\"ebs\":{\"deleteOnTermination\":true,\"volumeSize\":30,\"volumeType\":\"gp2\",\"snapshotId\":\"$ami_id\"}}]}"
+       env:
+          AWS_DEFAULT_REGION: us-east-1  # Replace with your desired region
+
+          
+
