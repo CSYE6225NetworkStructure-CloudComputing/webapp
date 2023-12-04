@@ -61,7 +61,7 @@ jobs:
           context: CI/Tests
           description: 'Integration tests failed'
 
-  - name: Configure AWS Credentials
+  - name: Configure AWS Credentials (Dev Account)
     uses: aws-actions/configure-aws-credentials@v1
     with:
       aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
@@ -82,7 +82,7 @@ jobs:
   - name: Build Artifact
     run: packer build webapp-debian.pkr.hcl
 
-  - name: Configure AWS Credentials
+  - name: Configure AWS Credentials (Demo Account)
     uses: aws-actions/configure-aws-credentials@v1
     with:
       aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_DEMO }}
@@ -110,7 +110,7 @@ jobs:
       aws autoscaling update-auto-scaling-group --auto-scaling-group-name "$asg_name" --launch-template "{\"LaunchTemplateId\":\"$lt_id\",\"Version\":\"$lt_version\"}"
     depends-on: create-lt-version
     env:
-      AWS_DEFAULT_REGION: us-east-1  #   region
+      AWS_DEFAULT_REGION: us-east-1  # Replace with your desired region
 
   # Start the instance refresh
   - name: Start Instance Refresh
@@ -121,7 +121,7 @@ jobs:
   - name: Wait for Instance Refresh
     run: |
       while true; do
-          refresh_status=$(aws autoscaling describe-instance-refreshes --auto-scaling-group-name my-asg-fc24038 --query 'InstanceRefreshes[0].Status' --output text)
+          refresh_status=$(aws autoscaling describe-instance-refreshes --auto-scaling-group-name <your-auto-scaling-group-name> --query 'InstanceRefreshes[0].Status' --output text)
           if [ "$refresh_status" == "Successful" ]; then
               echo "Instance refresh completed successfully."
               exit 0
