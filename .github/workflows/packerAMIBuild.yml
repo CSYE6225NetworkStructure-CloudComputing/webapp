@@ -106,7 +106,8 @@ jobs:
     - name: Set AMI ID
       id: set-ami-id
       run: |
-       echo "::set-output name=ami_id::$(grep -oP 'AMI: \Kami-\w+' artifact.txt)"
+        AMI_ID=$(packer build webapp-debian.pkr.hcl | awk '/ami-\w+/ {print $2}')
+        echo "AMI_ID=$AMI_ID" >> $GITHUB_ENV
 
 
     - name: Configure AWS Credentials demo
@@ -116,11 +117,11 @@ jobs:
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_DEMO }}
         aws-region: us-east-1
       env:
-        AMI_ID: ${{ steps.set-ami-id.outputs.ami_id }}
+        AMI_ID: ${{ env.AMI_ID }}
 
     - name: Create Launch Template Version  
       run: |
-        ami_id="${{ steps.packer-build.outputs.ami_id }}"
+        ami_id="${{ env.AMI_ID }}"
         lt_id="lt-0f4e50f631edc99f2"
         aws ec2 create-launch-template-version \
            --launch-template-id "$lt_id" \
@@ -128,7 +129,7 @@ jobs:
            --launch-template-data "{\"ImageId\":\"$ami_id\"}"
       env:
         AWS_DEFAULT_REGION: us-east-1  # Replace with your desired region
-
+        
     - name: Update Auto Scaling Group
       run: |
         lt_id="lt-0f4e50f631edc99f2"
