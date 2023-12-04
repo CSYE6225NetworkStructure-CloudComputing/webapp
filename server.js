@@ -44,6 +44,7 @@ app.get('/healthz', async (req, res) => {
         client.release();
       }
     }
+    //statsd.close();
 });
 
 app.use('/v2/assignments', assignmentRouter)
