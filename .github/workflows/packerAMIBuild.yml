@@ -129,32 +129,15 @@ jobs:
            --launch-template-data "{\"ImageId\":\"$ami_id\"}"
       env:
         AWS_DEFAULT_REGION: us-east-1  # Replace with your desired region
-
-
-
-    - name: Get Latest Launch Template Version
-      id: get-latest-version
+        
+    - name: Update the Auto Scaling group
       run: |
-        ami_id="${{ env.AMI_ID }}"
-        lt_id="lt-0f4e50f631edc99f2"
-        latest_version=$(aws ec2 describe-launch-template-versions --launch-template-id "$lt_id" --filters "Name=launch-template-data.image-id,Values=$ami_id" --query 'LaunchTemplateVersions[-1].VersionNumber' --output text)
-        echo "::set-output name=latest_version::$latest_version"
+          asg_name=$(aws autoscaling describe-auto-scaling-groups --query "AutoScalingGroups[?starts_with(AutoScalingGroupName,'my-asg-')].AutoScalingGroupName" --output text)
+          latest_version=$(aws ec2 describe-launch-template-versions --launch-template-id lt-0f4e50f631edc99f2 --query "LaunchTemplateVersions[?LaunchTemplateData.ImageId=='$ami_id'] | [-1].VersionNumber" --output text)
+          aws autoscaling update-auto-scaling-group --auto-scaling-group-name "$asg_name" --launch-template LaunchTemplateName=asg_launch_config,Version="$latest_version"
       env:
-        AWS_DEFAULT_REGION: us-east-1  # Replace with your desired region
+          AWS_DEFAULT_REGION: us-east-1  # Replace with your desired region
 
-    - name: Update Auto Scaling Group
-      run: |
-        lt_id="lt-0f4e50f631edc99f2"
-        asg_name="my-asg-6eae5c1"
-        lt_version="${{ steps.get-latest-version.outputs.latest_version }}"
-        aws autoscaling update-auto-scaling-group --auto-scaling-group-name "$asg_name" --launch-template "{\"LaunchTemplateId\":\"$lt_id\",\"Version\":\"$lt_version\"}"
-      env:  
-        AWS_DEFAULT_REGION: us-east-1  # Replace with your desired region
-
-    - name: Instance Refresh Command
-      run: |
-        asg_name="my-asg-6eae5c1"
-        aws autoscaling start-instance-refresh --auto-scaling-group-name "$asg_name"
-      env:
-        AWS_DEFAULT_REGION: us-east-1  
+    - name: Instance refresh
+      run: aws autoscaling start-instance-refresh --auto-scaling-group-name $(aws autoscaling describe-auto-scaling-groups --query "AutoScalingGroups[?starts_with(AutoScalingGroupName,'my-asg-')].AutoScalingGroupName" --output text)
 
