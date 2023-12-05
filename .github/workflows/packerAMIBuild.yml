@@ -118,26 +118,38 @@ jobs:
         aws-region: us-east-1
       env:
         AMI_ID: ${{ env.AMI_ID }}
-
-    - name: Create Launch Template Version  
+ 
+    - name: Copying AMI Artifacts and Launching Template
       run: |
-        ami_id="${{ env.AMI_ID }}"
-        lt_id="lt-0f4e50f631edc99f2"
-        aws ec2 create-launch-template-version \
-           --launch-template-id "$lt_id" \
-           --version-description "Updated with latest AMI" \
-           --launch-template-data "{\"ImageId\":\"$ami_id\"}"
+          pwd
+          ls
+          latestAmi=$(aws ec2 describe-images --filters "Name=owner-id,Values=214910345944" --query "sort_by(Images, &CreationDate)[-1].[ImageId]" --output "text")
+          echo "latest AMI:"
+          echo $latestAmi
+          aws ec2 create-launch-template-version --launch-template-name my-launch-template-34fd0c5 --launch-template-data "ImageId=$latestAmi" --source-version 1
       env:
-        AWS_DEFAULT_REGION: us-east-1  # Replace with your desired region
-        
-    - name: Update the Auto Scaling group
+          AWS_REGION: us-east-1
+ 
+    - name: Instance Refresh
       run: |
-          asg_name=$(aws autoscaling describe-auto-scaling-groups --query "AutoScalingGroups[?starts_with(AutoScalingGroupName,'my-asg-')].AutoScalingGroupName" --output text)
-          latest_version=$(aws ec2 describe-launch-template-versions --launch-template-id lt-0f4e50f631edc99f2 --query "LaunchTemplateVersions[?LaunchTemplateData.ImageId=='$ami_id'] | [-1].VersionNumber" --output text)
-          aws autoscaling update-auto-scaling-group --auto-scaling-group-name "$asg_name" --launch-template LaunchTemplateName=asg_launch_config,Version="$latest_version"
+          aws autoscaling start-instance-refresh --auto-scaling-group-name my-asg-6eae5c1 --preferences '{"InstanceWarmup": 300, "MinHealthyPercentage": 50}' --desired-configuration '{"LaunchTemplate":{"LaunchTemplateName": "launchEc2" , "Version": "$Latest"}}'
       env:
-          AWS_DEFAULT_REGION: us-east-1  # Replace with your desired region
-
-    - name: Instance refresh
-      run: aws autoscaling start-instance-refresh --auto-scaling-group-name $(aws autoscaling describe-auto-scaling-groups --query "AutoScalingGroups[?starts_with(AutoScalingGroupName,'my-asg-')].AutoScalingGroupName" --output text)
-
+          AWS_REGION: us-east-1
+ 
+    - name: Wait for Instance Refresh to Complete
+      run: |
+          while true; do
+            refreshStatus=$(aws autoscaling describe-instance-refreshes --auto-scaling-group-name my-asg-6eae5c1 --query 'InstanceRefreshes[0].Status' --output text)
+            if [ "$refreshStatus" = "Successful" ]; then
+              echo "Instance Refresh completed successfully!"
+              break
+            elif [ "$refreshStatus" = "Failed" ]; then
+              echo "Instance Refresh failed!"
+              exit 1
+            else
+              echo "Waiting for Instance Refresh to complete..."
+              sleep 60
+            fi
+          done
+      env:
+          AWS_REGION: us-east-1
