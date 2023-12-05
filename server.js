@@ -47,7 +47,7 @@ app.get('/healthz', async (req, res) => {
     //statsd.close();
 });
 
-app.use('/v2/assignments', assignmentRouter)
+app.use('/v1/assignments', assignmentRouter)
 
 // app.all('/*', (req, res) => {
 // if (req.method == 'GET') {
